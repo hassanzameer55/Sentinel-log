@@ -44,6 +44,21 @@ const LogsPage = () => {
   const { socket, isConnected } = useSocket();
   const scrollRef = useRef(null);
 
+  const handleExport = async () => {
+    try {
+      const { data } = await api.get('/logs/export?format=csv', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'sentinel-logs.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Export failed', error);
+    }
+  };
+
   useEffect(() => {
     if (!socket) return;
 
@@ -82,7 +97,10 @@ const LogsPage = () => {
             <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all">
               <Filter className="w-5 h-5" />
             </button>
-            <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all">
+            <button 
+              onClick={handleExport}
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
+            >
               <Download className="w-5 h-5" />
             </button>
           </div>

@@ -4,6 +4,7 @@ import useAuthStore from './store/useAuthStore';
 import LoginPage from './pages/LoginPage';
 import LogsPage from './pages/LogsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import TracingPage from './pages/TracingPage';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -43,7 +44,7 @@ function App() {
 
         <Route path="/tracing" element={
           <ProtectedRoute>
-            <AnalyticsPage />
+            <TracingPage />
           </ProtectedRoute>
         } />
 

@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const AlertRule = require('../models/AlertRule');
 const Log = require('../models/Log');
+const { dispatchAlert } = require('./notificationService');
 const logger = require('../utils/logger');
 
 /**
@@ -33,7 +34,8 @@ const evaluateRule = async (rule) => {
     rule.last_fired_at = Date.now();
     await rule.save();
 
-    // TODO: Integrate with Notification Dispatcher (Email, Slack, etc.)
+    // Dispatch real notifications (Requirement 6.2)
+    await dispatchAlert(rule, count);
   }
 };
 
