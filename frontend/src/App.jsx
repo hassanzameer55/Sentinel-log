@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import useAuthStore from './store/useAuthStore';
 import LoginPage from './pages/LoginPage';
 import LogsPage from './pages/LogsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -37,6 +38,12 @@ function App() {
         <Route path="/logs" element={
           <ProtectedRoute>
             <LogsPage />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/tracing" element={
+          <ProtectedRoute>
+            <AnalyticsPage />
           </ProtectedRoute>
         } />
 

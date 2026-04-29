@@ -208,3 +208,79 @@ exports.getTrace = async (req, res) => {
     res.status(500).json({ error: 'INTERNAL_ERROR' });
   }
 };
+
+/**
+ * GET /api/v1/logs/stats - Aggregated analytics (Phase 7)
+ */
+exports.getStats = async (req, res) => {
+  try {
+    const { days = 7 } = req.query;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const [levelStats, timeStats, serviceStats] = await Promise.all([
+      // 1. Level Distribution
+      Log.aggregate([
+        { $match: { timestamp: { $gte: since } } },
+        { $group: { _id: '$level', count: { $sum: 1 } } }
+      ]),
+      
+      // 2. Logs over time (Daily buckets)
+      Log.aggregate([
+        { $match: { timestamp: { $gte: since } } },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: '%Y-%m-%d', date: '$timestamp' }
+            },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]),
+
+      // 3. Service Distribution
+      Log.aggregate([
+        { $match: { timestamp: { $gte: since } } },
+        { $group: { _id: '$service_id', count: { $sum: 1 } } },
+        { $limit: 10 }
+      ])
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        levels: levelStats,
+        timeline: timeStats,
+        services: serviceStats
+      }
+    });
+  } catch (error) {
+    logger.error('Stats Error: %O', error);
+    res.status(500).json({ error: 'INTERNAL_ERROR' });
+  }
+};
+
+/**
+ * GET /api/v1/logs/export - Export logs to JSON/CSV (Requirement 1.5)
+ */
+exports.exportLogs = async (req, res) => {
+  try {
+    const { format = 'json' } = req.query;
+    const logs = await Log.find().limit(1000).lean();
+
+    if (format === 'csv') {
+      const headers = 'timestamp,level,service_id,message\n';
+      const rows = logs.map(l => 
+        `${l.timestamp.toISOString()},${l.level},${l.service_id},"${l.message.replace(/"/g, '""')}"`
+      ).join('\n');
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=sentinel-logs.csv');
+      return res.send(headers + rows);
+    }
+
+    res.status(200).json(logs);
+  } catch (error) {
+    res.status(500).json({ error: 'EXPORT_FAILED' });
+  }
+};

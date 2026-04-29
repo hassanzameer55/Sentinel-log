@@ -12,6 +12,8 @@ router.post('/bulk', logController.ingestBulk);
 router.use(protect); // All routes below require user auth
 
 router.get('/', restrictTo('VIEWER', 'DEVELOPER', 'SRE', 'ADMIN', 'SUPER_ADMIN'), logController.getLogs);
+router.get('/stats', restrictTo('DEVELOPER', 'SRE', 'ADMIN', 'SUPER_ADMIN'), logController.getStats);
+router.get('/export', restrictTo('ADMIN', 'SUPER_ADMIN'), logController.exportLogs);
 router.get('/trace/:requestId', restrictTo('DEVELOPER', 'SRE', 'ADMIN', 'SUPER_ADMIN'), logController.getTrace);
 
 module.exports = router;
