@@ -1,21 +1,50 @@
-function App() {
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full space-y-8 text-center">
-        <h1 className="text-5xl font-bold tracking-tight text-accent">
-          Sentinel Log
-        </h1>
-        <p className="text-xl text-slate-400">
-          Enterprise Log Aggregation & Observability Platform
-        </p>
-        <div className="p-6 rounded-2xl bg-card border border-slate-800 shadow-2xl">
-          <p className="text-slate-300">
-            Welcome to the Sentinel Dashboard. Initializing system metrics...
-          </p>
-        </div>
-      </div>
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import useAuthStore from './store/useAuthStore';
+import LoginPage from './pages/LoginPage';
+import LogsPage from './pages/LogsPage';
+
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuthStore();
+  
+  if (isLoading) return (
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
     </div>
-  )
+  );
+  
+  return isAuthenticated ? children : <Navigate to="/login" />;
+};
+
+function App() {
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <LogsPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/logs" element={
+          <ProtectedRoute>
+            <LogsPage />
+          </ProtectedRoute>
+        } />
+
+        {/* Redirect root to dashboard */}
+        <Route path="/" element={<Navigate to="/dashboard" />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
